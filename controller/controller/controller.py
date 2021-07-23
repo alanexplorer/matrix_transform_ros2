@@ -24,21 +24,16 @@ class ControllerSubscriber(Node):
     def listener_callback(self, msg):
 
         pos = np.array([msg.position.x, msg.position.y, msg.position.z, 0], dtype='float64').transpose()
-        q = [msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w] 
+        q = [msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z] 
 
-        l1 = [1 - 2*q[2]**2 - 2*q[3]**2, 2*q[1]*q[2] - 2*q[0]*q[3], 2*q[1]*q[3] + 2*q[0]*q[2], 0]
-        l2 = [2*q[1]*q[2] + 2*q[0]*q[3], 1 - 2*q[1]**2 - 2*q[3]**2, 2*q[2]*q[3] - 2*q[0]*q[1], 0]
-        l3 = [2*q[1]*q[3] - 2*q[0]*q[2], 2*q[2]*q[3] + 2*q[0]*q[1], 1 - 2*q[1]**2 - 2*q[2]**2, 0]
+        l1 = [1 - 2*q[2]**2 - 2*q[3]**2, 2*q[1]*q[2] - 2*q[0]*q[3], 2*q[1]*q[3] + 2*q[0]*q[2], pos[0]]
+        l2 = [2*q[1]*q[2] + 2*q[0]*q[3], 1 - 2*q[1]**2 - 2*q[3]**2, 2*q[2]*q[3] - 2*q[0]*q[1], pos[1]]
+        l3 = [2*q[1]*q[3] - 2*q[0]*q[2], 2*q[2]*q[3] + 2*q[0]*q[1], 1 - 2*q[1]**2 - 2*q[2]**2, pos[2]]
         l4 = [0, 0, 0, 1]
 
         matrix =  np.array([l1, l2, l3, l4], dtype='float64')
 
-        new_pos = matrix @ pos
-
-
-        #self.get_logger().info('I heard: "%s"' % msg.position)
-        print("rotation matrix")
-        print(matrix)
+        self.get_logger().info('matrix: "\n%s\n"' % matrix)
 
         # publish
         twist_msg = Twist()
@@ -49,7 +44,7 @@ class ControllerSubscriber(Node):
 
         roll = atan2(2*(q[0]*q[1] + q[2]*q[3]), 1 - 2*q[1]**2 - 2*q[2]**2)
         pitch = asin(2*q[0]*q[2] - 2*q[1]*q[3])
-        yaw = atan2(2*(q[0]*q[3] + q[1]*q[2]), 1 - 2*q[2]**2 - 2*q[2]**2)
+        yaw = atan2(2*(q[0]*q[3] + q[1]*q[2]), 1 - 2*q[2]**2 - 2*q[3]**2)
 
         twist_msg.angular.x = roll
         twist_msg.angular.y = pitch
